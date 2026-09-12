@@ -1,10 +1,30 @@
 import sys
 import os
+import traceback
 
-# Add backend directory to python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
 
-from app.main import app
+try:
+    from app.main import app
+except Exception as e:
+    err_tb = traceback.format_exc()
+    from fastapi import FastAPI
+    from fastapi.responses import JSONResponse
 
-# Export app for Vercel
-app = app
+    app = FastAPI(title="Error Fallback")
+
+    @app.api_route("/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
+    def catch_all_error(full_path: str):
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Backend initialization failed",
+                "detail": str(e),
+                "traceback": err_tb,
+                "sys_path": sys.path,
+                "cwd": os.getcwd(),
+            }
+        )
+

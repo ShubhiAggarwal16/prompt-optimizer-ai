@@ -1,13 +1,18 @@
 import io
 from datetime import datetime
 from typing import Dict, Any, Optional
-from reportlab.lib.pagesizes import letter
-from reportlab.lib import colors
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
+
+try:
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib import colors
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+    )
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    HAS_REPORTLAB = True
+except ImportError:
+    HAS_REPORTLAB = False
 
 class PDFService:
     @staticmethod
@@ -81,6 +86,8 @@ class PDFService:
 
     @staticmethod
     def generate_optimization_pdf(data: Dict[str, Any]) -> io.BytesIO:
+        if not HAS_REPORTLAB:
+            raise RuntimeError("reportlab is not installed; PDF export unavailable")
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
             buffer,
@@ -177,6 +184,8 @@ class PDFService:
 
     @staticmethod
     def generate_ab_test_pdf(data: Dict[str, Any]) -> io.BytesIO:
+        if not HAS_REPORTLAB:
+            raise RuntimeError("reportlab is not installed; PDF export unavailable")
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(
             buffer,

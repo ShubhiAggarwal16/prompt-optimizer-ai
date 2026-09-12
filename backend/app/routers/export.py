@@ -8,9 +8,18 @@ from app.services.pdf_service import pdf_service
 
 router = APIRouter(prefix="/api/export", tags=["Export"])
 
+def _pdf_unavailable():
+    raise HTTPException(
+        status_code=503,
+        detail="PDF export is not available in this environment (reportlab not installed). Use JSON export instead."
+    )
+
 @router.post("/optimization/pdf")
 def export_optimization_pdf_direct(data: dict):
-    pdf_buffer = pdf_service.generate_optimization_pdf(data)
+    try:
+        pdf_buffer = pdf_service.generate_optimization_pdf(data)
+    except RuntimeError:
+        _pdf_unavailable()
     filename = f"prompt_optimization_report_{int(data.get('overall_score', 90))}.pdf"
     return StreamingResponse(
         pdf_buffer,
@@ -38,7 +47,10 @@ def export_optimization_pdf(id: int, db: Session = Depends(get_db)):
         "key_improvements": json.loads(opt.suggestions_json) if opt.suggestions_json else []
     }
     
-    pdf_buffer = pdf_service.generate_optimization_pdf(data)
+    try:
+        pdf_buffer = pdf_service.generate_optimization_pdf(data)
+    except RuntimeError:
+        _pdf_unavailable()
     filename = f"prompt_optimization_report_{opt.id}.pdf"
     return StreamingResponse(
         pdf_buffer,
@@ -48,7 +60,10 @@ def export_optimization_pdf(id: int, db: Session = Depends(get_db)):
 
 @router.post("/ab-test/pdf")
 def export_ab_test_pdf_direct(data: dict):
-    pdf_buffer = pdf_service.generate_ab_test_pdf(data)
+    try:
+        pdf_buffer = pdf_service.generate_ab_test_pdf(data)
+    except RuntimeError:
+        _pdf_unavailable()
     filename = "ab_test_comparison_report.pdf"
     return StreamingResponse(
         pdf_buffer,
@@ -79,7 +94,10 @@ def export_ab_test_pdf(id: int, db: Session = Depends(get_db)):
         "verdict_reason": run.verdict_reason
     }
 
-    pdf_buffer = pdf_service.generate_ab_test_pdf(data)
+    try:
+        pdf_buffer = pdf_service.generate_ab_test_pdf(data)
+    except RuntimeError:
+        _pdf_unavailable()
     filename = f"ab_test_report_{run.id}.pdf"
     return StreamingResponse(
         pdf_buffer,

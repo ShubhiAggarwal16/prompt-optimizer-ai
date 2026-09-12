@@ -36,12 +36,23 @@ async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
   });
 
   if (!response.ok) {
-    let errorDetail = 'API request failed';
+    let errorDetail = `HTTP ${response.status}: API request failed`;
     try {
       const err = await response.json();
-      errorDetail = err.detail || err.message || errorDetail;
+      console.error(`[API Error] ${options.method || 'GET'} ${API_BASE}${url}`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: err,
+      });
+      errorDetail = err.detail || err.error || err.message || JSON.stringify(err);
     } catch {
-      errorDetail = response.statusText;
+      const text = await response.text().catch(() => '');
+      console.error(`[API Error] ${options.method || 'GET'} ${API_BASE}${url}`, {
+        status: response.status,
+        statusText: response.statusText,
+        body: text,
+      });
+      errorDetail = text || response.statusText || `HTTP ${response.status} Error`;
     }
     throw new Error(errorDetail);
   }

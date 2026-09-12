@@ -7,7 +7,10 @@ from app.config import settings
 from app.database import engine, Base
 import app.models
 
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as _e:
+    print(f"[startup] Warning: could not create DB tables: {_e}")
 
 from app.routers import generator, optimizer, ab_testing, history, analytics, export, config_router
 

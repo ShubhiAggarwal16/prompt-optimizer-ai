@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Key, X, CheckCircle2, AlertTriangle, ShieldCheck, Loader2 } from 'lucide-react';
+import { Key, X, CheckCircle2, AlertTriangle, ShieldCheck, Loader2, Sparkles, Trash2 } from 'lucide-react';
 import { api, getCustomApiKey, setCustomApiKey } from '../api/client';
 
 interface ApiKeyModalProps {
@@ -17,7 +17,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
 
   const handleTestKey = async () => {
     if (!keyInput.trim()) {
-      setStatus({ type: 'error', message: 'Please enter an Anthropic API Key.' });
+      setStatus({ type: 'error', message: 'Please paste your Anthropic API key first.' });
       return;
     }
     setTesting(true);
@@ -25,12 +25,12 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
     try {
       const res = await api.testApiKey(keyInput.trim());
       if (res.valid) {
-        setStatus({ type: 'success', message: res.message || 'Key verified successfully with Claude API!' });
+        setStatus({ type: 'success', message: 'All set! Your Claude API key is working perfectly.' });
       } else {
-        setStatus({ type: 'error', message: res.error || 'Invalid API Key.' });
+        setStatus({ type: 'error', message: res.error || 'Hmm, that key looks invalid. Please double-check it.' });
       }
     } catch (err: any) {
-      setStatus({ type: 'error', message: err.message || 'Verification failed.' });
+      setStatus({ type: 'error', message: err.message || 'Could not verify the key right now. Please try again.' });
     } finally {
       setTesting(false);
     }
@@ -45,91 +45,106 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
   const handleClear = () => {
     setKeyInput('');
     setCustomApiKey('');
-    setStatus({ type: 'info', message: 'Key removed. System will use backend env or smart heuristic engine.' });
+    setStatus({ type: 'info', message: 'Key cleared. PromptCraft will now use the friendly offline helper mode.' });
     onKeySaved();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/30 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-white border border-[#EFEBE4] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-card-hover relative">
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+          className="absolute top-5 right-5 text-[#8E90A6] hover:text-[#2B2D42] p-1.5 rounded-xl hover:bg-[#FAF7F2] transition-colors"
+          aria-label="Close dialog"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+        {/* Modal Header */}
+        <div className="flex items-start space-x-3.5 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
             <Key className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white">Anthropic Claude API Key</h3>
-            <p className="text-xs text-slate-400">Connect your Claude API key for live generation calls</p>
+            <h3 className="font-display font-bold text-xl text-[#2B2D42] tracking-tight">
+              Connect your Claude API Key
+            </h3>
+            <p className="text-sm text-[#64748B] mt-1 leading-relaxed">
+              Add your personal key to use live Claude 3.5 Sonnet. If you prefer to stay offline, our built-in helper works completely free.
+            </p>
           </div>
         </div>
 
+        {/* Input Field */}
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              API Key <span className="text-slate-500 font-normal">(sk-ant-api03-...)</span>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#64748B] mb-2">
+              Your API Key
             </label>
             <input
               type="password"
               value={keyInput}
               onChange={(e) => setKeyInput(e.target.value)}
               placeholder="sk-ant-api03-..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-sm focus:outline-none focus:border-indigo-500 font-mono transition-colors"
+              className="w-full px-4 py-3 rounded-xl bg-[#FAF7F2] border border-[#EFEBE4] text-[#2B2D42] text-sm focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 font-mono transition-all placeholder:text-[#8E90A6]"
             />
-          </div>
-
-          {status && (
-            <div
-              className={`p-3 rounded-xl text-xs flex items-start space-x-2 ${
-                status.type === 'success'
-                  ? 'bg-emerald-950/60 border border-emerald-500/30 text-emerald-300'
-                  : status.type === 'error'
-                  ? 'bg-rose-950/60 border border-rose-500/30 text-rose-300'
-                  : 'bg-indigo-950/60 border border-indigo-500/30 text-indigo-300'
-              }`}
-            >
-              {status.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400 mt-0.5" />
-              ) : (
-                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400 mt-0.5" />
-              )}
-              <span>{status.message}</span>
-            </div>
-          )}
-
-          <div className="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 text-xs text-slate-400 space-y-1.5">
-            <div className="flex items-center text-slate-300 font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400 mr-1.5" />
-              Built-in Intelligent Fallback
-            </div>
-            <p>
-              If no API key is provided, the application runs on a high-fidelity prompt engineering heuristic engine with realistic rubric scores and completions.
+            <p className="text-xs text-[#8E90A6] mt-1.5">
+              Stored only inside your browser's private local storage. Never sent to any 3rd party.
             </p>
           </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <div className="flex space-x-2">
+          {/* Status Message */}
+          {status && (
+            <div
+              className={`p-3.5 rounded-2xl text-xs flex items-start space-x-2.5 border ${
+                status.type === 'success'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  : status.type === 'error'
+                  ? 'bg-rose-50 border-rose-200 text-rose-800'
+                  : 'bg-indigo-50 border-indigo-200 text-indigo-800'
+              }`}
+            >
+              {status.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600 mt-0.5" />
+              )}
+              <span className="font-medium leading-relaxed">{status.message}</span>
+            </div>
+          )}
+
+          {/* Friendly Offline Mode Reassurance Box */}
+          <div className="bg-[#FAF7F2] border border-[#EFEBE4] rounded-2xl p-4 text-xs text-[#64748B] space-y-1.5">
+            <div className="flex items-center text-[#2B2D42] font-semibold text-sm">
+              <Sparkles className="w-4 h-4 text-amber-500 mr-2" />
+              Free Offline Helper Mode
+            </div>
+            <p className="leading-relaxed">
+              Without an API key, PromptCraft automatically runs in offline mode using our rule-based heuristic engine. You can generate, optimize, and test prompts anytime!
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-3">
+            <div className="flex items-center space-x-2">
               <button
                 type="button"
                 onClick={handleTestKey}
                 disabled={testing || !keyInput.trim()}
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 disabled:opacity-50 transition-colors flex items-center space-x-1.5"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#FAF7F2] hover:bg-[#F0EBE1] text-[#2B2D42] border border-[#EFEBE4] disabled:opacity-50 transition-all flex items-center space-x-1.5"
               >
-                {testing && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Test Key</span>
+                {testing && <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />}
+                <span>{testing ? 'Checking key...' : 'Test connection'}</span>
               </button>
               {keyInput && (
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-950/40 transition-colors"
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors flex items-center space-x-1"
                 >
-                  Clear
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Remove</span>
                 </button>
               )}
             </div>
@@ -137,9 +152,9 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
             <button
               type="button"
               onClick={handleSave}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 transition-colors"
+              className="px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-soft hover:shadow-card hover:-translate-y-0.5 transition-all"
             >
-              Save Key
+              Save &amp; Continue
             </button>
           </div>
         </div>
@@ -147,3 +162,4 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onKey
     </div>
   );
 };
+export default ApiKeyModal;

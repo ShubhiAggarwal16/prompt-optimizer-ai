@@ -1,5 +1,14 @@
 import React from 'react';
-import { Sparkles, Sliders, SplitSquareVertical, LayoutDashboard, Key, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  Sparkles,
+  Sliders,
+  SplitSquareVertical,
+  BookOpen,
+  Key,
+  CheckCircle2,
+  HelpCircle,
+  HeartHandshake
+} from 'lucide-react';
 import { ConfigStatus } from '../types';
 
 interface NavbarProps {
@@ -17,107 +26,117 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenApiKeyModal,
   hasCustomKey,
 }) => {
-  const isKeyActive = hasCustomKey || config?.has_anthropic_key;
+  const isKeyActive = Boolean(hasCustomKey || config?.has_anthropic_key);
+
+  const navItems: Array<{
+    id: 'generator' | 'optimizer' | 'ab-testing' | 'dashboard';
+    label: string;
+    icon: React.ReactNode;
+  }> = [
+    { id: 'generator', label: 'Generator', icon: <Sparkles className="w-4 h-4" /> },
+    { id: 'optimizer', label: 'Optimizer', icon: <Sliders className="w-4 h-4" /> },
+    { id: 'ab-testing', label: 'A/B Testing', icon: <SplitSquareVertical className="w-4 h-4" /> },
+    { id: 'dashboard', label: 'History & Analytics', icon: <BookOpen className="w-4 h-4" /> },
+  ];
 
   return (
-    <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EFEBE4] shadow-[0_1px_3px_rgba(43,45,66,0.03)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('generator')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400 p-0.5 shadow-lg shadow-indigo-500/20 flex items-center justify-center">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-indigo-400" />
-              </div>
+        <div className="flex items-center justify-between h-20">
+          
+          {/* Logo & Friendly Tagline */}
+          <div
+            className="flex items-center space-x-3.5 cursor-pointer group"
+            onClick={() => setActiveTab('generator')}
+          >
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/80 border border-indigo-200/60 flex items-center justify-center shadow-soft group-hover:scale-105 transition-transform">
+              <span className="text-xl" role="img" aria-label="sparkles">✨</span>
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-lg bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+                <span className="font-display font-bold text-xl text-[#2B2D42] tracking-tight">
                   PromptCraft AI
                 </span>
-                <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                  Claude Engine
+                <span className="hidden sm:inline-flex items-center text-[11px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/60">
+                  Friendly prompt helper
                 </span>
               </div>
-              <p className="text-xs text-slate-400 hidden sm:block">Prompt Generation, Optimization & A/B Testing</p>
+              <p className="text-xs text-[#64748B] font-normal">
+                Write better prompts, without the guesswork.
+              </p>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center space-x-1 bg-slate-950/60 p-1 rounded-xl border border-slate-800/80">
-            <button
-              onClick={() => setActiveTab('generator')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'generator'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Generator</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('optimizer')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'optimizer'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Optimizer</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('ab-testing')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'ab-testing'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <SplitSquareVertical className="w-3.5 h-3.5" />
-              <span>A/B Testing</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                activeTab === 'dashboard'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>History & Analytics</span>
-            </button>
+          {/* Navigation Pill Menu */}
+          <nav className="hidden md:flex items-center space-x-1.5 bg-[#FAF7F2] p-1.5 rounded-2xl border border-[#EFEBE4]">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-white text-indigo-700 shadow-soft font-semibold'
+                      : 'text-[#64748B] hover:text-[#2B2D42] hover:bg-white/60'
+                  }`}
+                >
+                  <span className={isActive ? 'text-indigo-600' : 'text-[#8E90A6]'}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Settings / API Key Button */}
-          <div className="flex items-center space-x-3">
+          {/* Mode Badge & Settings Button */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Friendly Mode Chip */}
             <button
               onClick={onOpenApiKeyModal}
-              className="flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 transition-colors"
-              title="Configure Anthropic Claude API Key"
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all hover:shadow-soft ${
+                isKeyActive
+                  ? 'bg-emerald-50/90 text-emerald-800 border-emerald-200/70 hover:bg-emerald-100/60'
+                  : 'bg-amber-50/90 text-amber-800 border-amber-200/70 hover:bg-amber-100/60'
+              }`}
+              title={
+                isKeyActive
+                  ? 'Live AI mode: Connected to Claude API'
+                  : 'Offline helper mode: Smart local heuristics — click to add your Claude key'
+              }
             >
-              <Key className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="hidden sm:inline">Claude API</span>
-              {isKeyActive ? (
-                <span className="flex items-center text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">
-                  <CheckCircle2 className="w-2.5 h-2.5 mr-1" />
-                  Live API
-                </span>
-              ) : (
-                <span className="flex items-center text-[10px] font-semibold text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-500/30">
-                  <AlertCircle className="w-2.5 h-2.5 mr-1" />
-                  Smart Engine
-                </span>
-              )}
+              <span className={`w-2 h-2 rounded-full ${isKeyActive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+              <span className="font-semibold">
+                {isKeyActive ? 'Live AI mode' : 'Offline helper mode'}
+              </span>
+              <Key className="w-3 h-3 text-[#8E90A6]" />
             </button>
           </div>
+        </div>
+
+        {/* Mobile Navigation Row */}
+        <div className="flex md:hidden items-center justify-between py-2.5 border-t border-[#EFEBE4] overflow-x-auto space-x-1">
+          {navItems.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-medium shrink-0 transition-all ${
+                  isActive
+                    ? 'bg-indigo-600 text-white font-semibold shadow-soft'
+                    : 'text-[#64748B] hover:text-[#2B2D42] bg-[#FAF7F2]'
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </header>
   );
 };
+export default Navbar;

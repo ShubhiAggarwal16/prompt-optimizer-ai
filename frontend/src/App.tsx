@@ -7,7 +7,7 @@ import { Dashboard } from './components/Dashboard';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { ConfigStatus } from './types';
 import { api, getCustomApiKey } from './api/client';
-import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info, X, Heart } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'generator' | 'optimizer' | 'ab-testing' | 'dashboard'>('generator');
@@ -48,32 +48,32 @@ export const App: React.FC = () => {
     setOptimizerInitialPrompt(promptText);
     if (goal) setOptimizerInitialGoal(goal);
     setActiveTab('optimizer');
-    showToast('Loaded prompt into Optimizer!', 'info');
+    showToast('Loaded your prompt into the Optimizer!', 'info');
   };
 
   const handleSendToABTesting = (promptA: string, labelA: string = 'Candidate A') => {
     setAbInitialPromptA(promptA);
     setAbInitialLabelA(labelA);
     setActiveTab('ab-testing');
-    showToast('Loaded prompt into A/B Test Variant A!', 'info');
+    showToast('Sent prompt into A/B Test as Variant A!', 'info');
   };
 
   const handleSendBothToABTesting = (
     promptA: string,
     promptB: string,
-    labelA: string = 'Original',
-    labelB: string = 'Optimized'
+    labelA: string = 'Original draft',
+    labelB: string = 'Improved version'
   ) => {
     setAbInitialPromptA(promptA);
     setAbInitialPromptB(promptB);
     setAbInitialLabelA(labelA);
     setAbInitialLabelB(labelB);
     setActiveTab('ab-testing');
-    showToast('Loaded both variants into A/B Testing!', 'info');
+    showToast('Sent both versions into A/B Testing!', 'info');
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2B2D42] flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -84,7 +84,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main View Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20">
         {activeTab === 'generator' && (
           <PromptGenerator
             onSendToOptimizer={handleSendToOptimizer}
@@ -121,48 +121,54 @@ export const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/80 py-6 text-center text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>AI-Powered Prompt Generation and Optimization System ? Built with React, Tailwind & FastAPI</span>
-          <span className="text-slate-600">Anthropic Claude & Heuristic Engine Integrated</span>
+      {/* Warm, Friendly Footer */}
+      <footer className="mt-auto border-t border-[#EFEBE4] bg-white/70 py-6 text-center text-xs text-[#64748B]">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center space-x-1.5">
+            <span>Made with care by</span>
+            <span className="font-semibold text-[#2B2D42]">Shubhi Aggarwal</span>
+            <span className="text-rose-500">❤️</span>
+          </div>
+          <span className="text-[#8E90A6]">
+            PromptCraft AI &bull; A calm, helpful writing tool for better prompts
+          </span>
         </div>
       </footer>
 
-      {/* API Key Modal */}
+      {/* Settings / API Key Modal */}
       <ApiKeyModal
         isOpen={apiKeyModalOpen}
         onClose={() => setApiKeyModalOpen(false)}
         onKeySaved={() => {
           setHasCustomKey(Boolean(getCustomApiKey()));
           fetchConfig();
-          showToast('API Key settings updated!', 'success');
+          showToast('Key settings updated successfully!', 'success');
         }}
       />
 
       {/* Global Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 animate-slideUp">
+        <div className="fixed bottom-6 right-6 z-50 animate-bounce-subtle">
           <div
-            className={`flex items-center space-x-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md text-xs font-medium ${
+            className={`flex items-center space-x-3 px-4 py-3 rounded-2xl shadow-card border backdrop-blur-md text-sm font-medium ${
               toast.type === 'success'
-                ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                 : toast.type === 'error'
-                ? 'bg-rose-950/90 border-rose-500/40 text-rose-200'
-                : 'bg-indigo-950/90 border-indigo-500/40 text-indigo-200'
+                ? 'bg-rose-50 border-rose-200 text-rose-900'
+                : 'bg-indigo-50 border-indigo-200 text-indigo-900'
             }`}
           >
             {toast.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : toast.type === 'error' ? (
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
             ) : (
-              <Info className="w-4 h-4 text-indigo-400 shrink-0" />
+              <Info className="w-4 h-4 text-indigo-600 shrink-0" />
             )}
             <span>{toast.message}</span>
             <button
               onClick={() => setToast(null)}
-              className="ml-2 text-slate-400 hover:text-white p-0.5"
+              className="ml-2 text-[#8E90A6] hover:text-[#2B2D42] p-0.5 rounded-lg hover:bg-black/5"
             >
               <X className="w-3.5 h-3.5" />
             </button>

@@ -8,16 +8,15 @@ import {
   Search,
   Trash2,
   Star,
-  Download,
   FileText,
-  FileJson,
   Eye,
   RefreshCw,
-  Award,
   Layers,
   BarChart3,
-  CheckCircle2,
   X,
+  Heart,
+  ArrowRight,
+  FolderOpen,
 } from 'lucide-react';
 import {
   PromptHistoryItem,
@@ -62,7 +61,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setOptimizations(optsData);
       setABTests(abData);
     } catch (err: any) {
-      onShowToast(err.message || 'Could not load dashboard data', 'error');
+      onShowToast(err.message || 'Could not load your activity data right now.', 'error');
     } finally {
       setLoading(false);
     }
@@ -83,22 +82,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
       setPrompts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, is_favorite: res.is_favorite } : p))
       );
-      onShowToast(res.is_favorite ? 'Added to favorites!' : 'Removed from favorites', 'info');
+      onShowToast(res.is_favorite ? 'Saved to your favorites!' : 'Removed from favorites', 'info');
     } catch (err: any) {
-      onShowToast('Could not update favorite', 'error');
+      onShowToast('Could not update favorites right now.', 'error');
     }
   };
 
   const handleDeleteItem = async (type: 'prompt' | 'optimization' | 'ab-test', id: number) => {
-    if (!confirm('Are you sure you want to delete this record?')) return;
+    if (!confirm('Are you sure you want to remove this item from your library?')) return;
     try {
       await api.deleteHistoryItem(type, id);
       if (type === 'prompt') setPrompts((prev) => prev.filter((p) => p.id !== id));
       if (type === 'optimization') setOptimizations((prev) => prev.filter((o) => o.id !== id));
       if (type === 'ab-test') setABTests((prev) => prev.filter((a) => a.id !== id));
-      onShowToast('Record deleted.', 'info');
+      onShowToast('Item removed.', 'info');
     } catch (err: any) {
-      onShowToast('Could not delete record', 'error');
+      onShowToast('Could not delete this item.', 'error');
     }
   };
 
@@ -106,9 +105,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
     try {
       const data = await api.getSingleOptimization(id);
       await api.downloadOptimizationPDF(data);
-      onShowToast('Optimization PDF downloaded!', 'success');
+      onShowToast('Downloaded your optimization PDF report!', 'success');
     } catch (err: any) {
-      onShowToast('Export failed', 'error');
+      onShowToast('Could not export PDF report.', 'error');
     }
   };
 
@@ -116,38 +115,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
     try {
       const data = await api.getSingleABTest(id);
       await api.downloadABTestPDF(data);
-      onShowToast('A/B Test PDF downloaded!', 'success');
+      onShowToast('Downloaded your A/B test PDF report!', 'success');
     } catch (err: any) {
-      onShowToast('Export failed', 'error');
+      onShowToast('Could not export PDF report.', 'error');
     }
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <div className="space-y-8 max-w-6xl mx-auto pb-12">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl border border-[#EFEBE4] p-6 sm:p-8 shadow-soft">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-3">
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>Module 4: Analytics & Prompt Repository</span>
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-800 text-xs font-semibold mb-3">
+              <LayoutDashboard className="w-3.5 h-3.5 text-amber-600" />
+              <span>Prompt Library & History</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Prompt Intelligence Dashboard
+            <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#2B2D42] tracking-tight">
+              Your prompt library & activity
             </h1>
-            <p className="mt-1 text-sm text-slate-300">
-              Audit prompt iterations, historical rubric scores, technique frequencies, and past benchmark runs.
+            <p className="mt-1 text-sm text-[#64748B]">
+              Browse your saved prompts, revisit past optimizations, and review your benchmark test results all in one place.
             </p>
           </div>
 
           <button
+            type="button"
             onClick={fetchDashboardData}
             disabled={loading}
-            className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors shrink-0"
+            className="flex items-center space-x-2 px-4 py-2.5 rounded-2xl text-xs font-semibold bg-[#FAF7F2] hover:bg-white text-[#2B2D42] border border-[#EFEBE4] shadow-sm transition-all shrink-0 active:scale-95"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh Data</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-indigo-600' : 'text-[#64748B]'}`} />
+            <span>Refresh</span>
           </button>
         </div>
       </div>
@@ -155,43 +154,43 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Analytics KPI Cards */}
       {analytics && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-              <Sparkles className="w-6 h-6" />
+          <div className="bg-white border border-[#EFEBE4] rounded-3xl p-5 shadow-soft flex items-center space-x-4">
+            <div className="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+              <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400 font-medium">Prompts Generated</div>
-              <div className="text-2xl font-extrabold text-white mt-0.5">{analytics.total_prompts_generated}</div>
+              <div className="text-xs text-[#64748B] font-medium">Prompts written</div>
+              <div className="text-2xl font-extrabold text-[#2B2D42] mt-0.5">{analytics.total_prompts_generated}</div>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <TrendingUp className="w-6 h-6" />
+          <div className="bg-white border border-[#EFEBE4] rounded-3xl p-5 shadow-soft flex items-center space-x-4">
+            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+              <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400 font-medium">Avg Score Improvement</div>
-              <div className="text-2xl font-extrabold text-emerald-400 mt-0.5">+{analytics.avg_improvement_pct}%</div>
+              <div className="text-xs text-[#64748B] font-medium">Average score boost</div>
+              <div className="text-2xl font-extrabold text-emerald-600 mt-0.5">+{analytics.avg_improvement_pct}%</div>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400">
-              <Sliders className="w-6 h-6" />
+          <div className="bg-white border border-[#EFEBE4] rounded-3xl p-5 shadow-soft flex items-center space-x-4">
+            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-100 text-amber-600">
+              <Sliders className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400 font-medium">Optimizations Conducted</div>
-              <div className="text-2xl font-extrabold text-white mt-0.5">{analytics.total_optimizations}</div>
+              <div className="text-xs text-[#64748B] font-medium">Optimizations done</div>
+              <div className="text-2xl font-extrabold text-[#2B2D42] mt-0.5">{analytics.total_optimizations}</div>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex items-center space-x-4">
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
-              <SplitSquareVertical className="w-6 h-6" />
+          <div className="bg-white border border-[#EFEBE4] rounded-3xl p-5 shadow-soft flex items-center space-x-4">
+            <div className="p-3.5 rounded-2xl bg-teal-50 border border-teal-100 text-teal-600">
+              <SplitSquareVertical className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs text-slate-400 font-medium">A/B Test Runs</div>
-              <div className="text-2xl font-extrabold text-white mt-0.5">{analytics.total_ab_tests}</div>
+              <div className="text-xs text-[#64748B] font-medium">A/B tests run</div>
+              <div className="text-2xl font-extrabold text-[#2B2D42] mt-0.5">{analytics.total_ab_tests}</div>
             </div>
           </div>
         </div>
@@ -201,79 +200,90 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {analytics && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Technique Distribution */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-              <Layers className="w-4 h-4 text-indigo-400" />
-              <span>Prompt Engineering Technique Usage</span>
+          <div className="bg-white border border-[#EFEBE4] rounded-3xl p-6 shadow-soft space-y-4">
+            <h3 className="text-sm font-bold text-[#2B2D42] flex items-center space-x-2">
+              <Layers className="w-4 h-4 text-indigo-600" />
+              <span>Prompt techniques you've used</span>
             </h3>
-            <div className="space-y-3">
-              {Object.entries(analytics.technique_distribution).map(([tech, count]) => {
-                const total = Math.max(analytics.total_prompts_generated, 1);
-                const pct = Math.min(100, Math.round((count / total) * 100));
-                return (
-                  <div key={tech} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-300 font-medium">{tech}</span>
-                      <span className="text-slate-400 font-mono">{count} uses ({pct}%)</span>
+            <div className="space-y-3 pt-1">
+              {Object.entries(analytics.technique_distribution).length === 0 ? (
+                <p className="text-xs text-[#94A3B8]">No technique data yet.</p>
+              ) : (
+                Object.entries(analytics.technique_distribution).map(([tech, count]) => {
+                  const total = Math.max(analytics.total_prompts_generated, 1);
+                  const pct = Math.min(100, Math.round((count / total) * 100));
+                  return (
+                    <div key={tech} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#2B2D42] font-semibold">{tech}</span>
+                        <span className="text-[#64748B] font-mono text-[11px]">{count} times ({pct}%)</span>
+                      </div>
+                      <div className="w-full bg-[#FAF7F2] h-2 rounded-full overflow-hidden border border-[#EFEBE4]">
+                        <div className="bg-indigo-500 h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                      </div>
                     </div>
-                    <div className="w-full bg-slate-950 h-2 rounded-full overflow-hidden">
-                      <div className="bg-indigo-500 h-full rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
           {/* Category Distribution */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <h3 className="text-sm font-bold text-white flex items-center space-x-2">
-              <BarChart3 className="w-4 h-4 text-sky-400" />
-              <span>Domain Category Breakdown</span>
+          <div className="bg-white border border-[#EFEBE4] rounded-3xl p-6 shadow-soft space-y-4">
+            <h3 className="text-sm font-bold text-[#2B2D42] flex items-center space-x-2">
+              <BarChart3 className="w-4 h-4 text-teal-600" />
+              <span>Topics and areas</span>
             </h3>
-            <div className="flex flex-wrap gap-2 pt-2">
-              {Object.entries(analytics.category_distribution).map(([cat, count]) => (
-                <div key={cat} className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-xs font-semibold text-slate-200">{cat}</span>
-                  <span className="text-[11px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                    {count}
-                  </span>
-                </div>
-              ))}
+            <div className="flex flex-wrap gap-2 pt-1">
+              {Object.entries(analytics.category_distribution).length === 0 ? (
+                <p className="text-xs text-[#94A3B8]">No categories yet.</p>
+              ) : (
+                Object.entries(analytics.category_distribution).map(([cat, count]) => (
+                  <div key={cat} className="flex items-center space-x-2 px-3 py-2 rounded-2xl bg-[#FAF7F2] border border-[#EFEBE4]">
+                    <span className="text-xs font-semibold text-[#2B2D42]">{cat}</span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+                      {count}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* History Data Table Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      <div className="bg-white border border-[#EFEBE4] rounded-3xl shadow-card overflow-hidden">
         {/* Table Navigation & Search Header */}
-        <div className="p-5 border-b border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="p-5 sm:p-6 border-b border-[#EFEBE4] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           {/* History Sub-tabs */}
-          <div className="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <div className="flex items-center space-x-1 bg-[#FAF7F2] p-1 rounded-2xl border border-[#EFEBE4]">
             <button
+              type="button"
               onClick={() => setActiveHistoryTab('prompts')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                activeHistoryTab === 'prompts' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeHistoryTab === 'prompts' ? 'bg-white text-indigo-600 shadow-sm' : 'text-[#64748B] hover:text-[#2B2D42]'
               }`}
             >
-              Generated Prompts ({prompts.length})
+              Saved Prompts ({prompts.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveHistoryTab('optimizations')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                activeHistoryTab === 'optimizations' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeHistoryTab === 'optimizations' ? 'bg-white text-indigo-600 shadow-sm' : 'text-[#64748B] hover:text-[#2B2D42]'
               }`}
             >
               Optimizations ({optimizations.length})
             </button>
             <button
+              type="button"
               onClick={() => setActiveHistoryTab('ab-tests')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                activeHistoryTab === 'ab-tests' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                activeHistoryTab === 'ab-tests' ? 'bg-white text-indigo-600 shadow-sm' : 'text-[#64748B] hover:text-[#2B2D42]'
               }`}
             >
-              A/B Test Runs ({abTests.length})
+              A/B Tests ({abTests.length})
             </button>
           </div>
 
@@ -281,18 +291,18 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {activeHistoryTab === 'prompts' && (
             <form onSubmit={handleSearch} className="flex items-center space-x-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-64">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+                <Search className="w-3.5 h-3.5 text-[#94A3B8] absolute left-3 top-3" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search prompts or tasks..."
-                  className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                  placeholder="Search prompts by keyword..."
+                  className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#FAF7F2] border border-[#EFEBE4] text-[#2B2D42] text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400/40"
                 />
               </div>
               <button
                 type="submit"
-                className="px-3 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+                className="px-3.5 py-2 rounded-xl bg-white text-xs font-semibold text-[#2B2D42] border border-[#EFEBE4] hover:bg-[#FAF7F2] transition-colors shadow-sm"
               >
                 Search
               </button>
@@ -304,68 +314,75 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {activeHistoryTab === 'prompts' && (
           <div className="overflow-x-auto">
             {prompts.length === 0 ? (
-              <div className="p-12 text-center text-xs text-slate-500">
-                No saved prompts found. Generate some prompts to see them listed here.
+              <div className="p-12 text-center space-y-2">
+                <FolderOpen className="w-8 h-8 text-[#94A3B8] mx-auto stroke-1" />
+                <p className="text-sm font-semibold text-[#2B2D42]">Nothing here yet.</p>
+                <p className="text-xs text-[#64748B]">Your saved prompts will show up here once you write some.</p>
               </div>
             ) : (
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
+                <thead className="bg-[#FAF7F2] text-[#64748B] font-semibold border-b border-[#EFEBE4]">
                   <tr>
-                    <th className="p-4">Fav</th>
-                    <th className="p-4">Title & Technique</th>
-                    <th className="p-4">Task Requirement</th>
+                    <th className="p-4 w-12 text-center">Fav</th>
+                    <th className="p-4">Prompt Title & Technique</th>
+                    <th className="p-4">Task Goal</th>
                     <th className="p-4">Category</th>
                     <th className="p-4">Date</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#EFEBE4]">
                   {prompts.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4">
+                    <tr key={p.id} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                      <td className="p-4 text-center">
                         <button
+                          type="button"
                           onClick={() => handleToggleFavorite(p.id)}
                           className={`p-1 rounded-md transition-colors ${
-                            p.is_favorite ? 'text-amber-400' : 'text-slate-600 hover:text-slate-400'
+                            p.is_favorite ? 'text-rose-500' : 'text-[#CBD5E1] hover:text-[#94A3B8]'
                           }`}
+                          title={p.is_favorite ? 'Favorite prompt' : 'Add to favorites'}
                         >
-                          <Star className="w-4 h-4 fill-current" />
+                          <Heart className="w-4 h-4 fill-current" />
                         </button>
                       </td>
                       <td className="p-4">
-                        <div className="font-semibold text-slate-200">{p.prompt_title}</div>
-                        <div className="text-[11px] text-indigo-400 mt-0.5">{p.technique}</div>
+                        <div className="font-bold text-[#2B2D42]">{p.prompt_title}</div>
+                        <div className="text-[11px] text-indigo-600 mt-0.5">{p.technique}</div>
                       </td>
-                      <td className="p-4 max-w-xs truncate text-slate-300">
+                      <td className="p-4 max-w-xs truncate text-[#64748B]">
                         {p.task_description}
                       </td>
                       <td className="p-4">
-                        <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[11px]">
+                        <span className="px-2.5 py-0.5 rounded-full bg-[#FAF7F2] text-[#2B2D42] border border-[#EFEBE4] text-[11px] font-medium">
                           {p.category}
                         </span>
                       </td>
-                      <td className="p-4 text-slate-500 whitespace-nowrap">
+                      <td className="p-4 text-[#94A3B8] whitespace-nowrap">
                         {new Date(p.created_at).toLocaleDateString()}
                       </td>
                       <td className="p-4 text-right space-x-2 whitespace-nowrap">
                         <button
+                          type="button"
                           onClick={() => setSelectedPrompt(p)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px]"
+                          className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#FAF7F2] text-[#2B2D42] border border-[#EFEBE4] text-[11px] font-medium shadow-sm"
                           title="View Full Prompt"
                         >
-                          <Eye className="w-3 h-3 inline mr-1" />
+                          <Eye className="w-3 h-3 inline mr-1 text-[#64748B]" />
                           View
                         </button>
                         <button
+                          type="button"
                           onClick={() => onLoadPromptToOptimizer(p.prompt_text, `Refine ${p.prompt_title}`)}
-                          className="px-2.5 py-1 rounded-lg bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/30 text-[11px]"
-                          title="Optimize in Module 2"
+                          className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-medium"
+                          title="Optimize in Optimizer"
                         >
                           Optimize
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteItem('prompt', p.id)}
-                          className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                          className="p-1 text-[#94A3B8] hover:text-rose-600 transition-colors"
                           title="Delete"
                         >
                           <Trash2 className="w-3.5 h-3.5 inline" />
@@ -383,58 +400,63 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {activeHistoryTab === 'optimizations' && (
           <div className="overflow-x-auto">
             {optimizations.length === 0 ? (
-              <div className="p-12 text-center text-xs text-slate-500">
-                No optimization history records yet. Optimize a prompt to see its track record.
+              <div className="p-12 text-center space-y-2">
+                <FolderOpen className="w-8 h-8 text-[#94A3B8] mx-auto stroke-1" />
+                <p className="text-sm font-semibold text-[#2B2D42]">No past optimizations yet.</p>
+                <p className="text-xs text-[#64748B]">Optimize any draft in the Optimizer tab to see your history here.</p>
               </div>
             ) : (
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
+                <thead className="bg-[#FAF7F2] text-[#64748B] font-semibold border-b border-[#EFEBE4]">
                   <tr>
                     <th className="p-4">ID</th>
-                    <th className="p-4">Baseline Prompt</th>
-                    <th className="p-4">Score Delta</th>
-                    <th className="p-4">Improvement</th>
+                    <th className="p-4">Original Prompt Snippet</th>
+                    <th className="p-4">Score Change</th>
+                    <th className="p-4">Net Improvement</th>
                     <th className="p-4">Date</th>
-                    <th className="p-4 text-right">Export</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#EFEBE4]">
                   {optimizations.map((o) => (
-                    <tr key={o.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-mono text-slate-500">#{o.id}</td>
-                      <td className="p-4 max-w-sm truncate text-slate-200 font-mono">
+                    <tr key={o.id} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                      <td className="p-4 font-mono text-[#94A3B8]">#{o.id}</td>
+                      <td className="p-4 max-w-sm truncate text-[#2B2D42] font-mono">
                         {o.original_prompt}
                       </td>
                       <td className="p-4">
-                        <span className="text-slate-400">{o.original_overall_score}</span>
-                        <span className="text-slate-500 mx-1.5">?</span>
-                        <span className="font-bold text-emerald-400">{o.overall_score}</span>
+                        <span className="text-[#64748B]">{o.original_overall_score}</span>
+                        <span className="text-[#94A3B8] mx-1.5">→</span>
+                        <span className="font-bold text-emerald-600">{o.overall_score}</span>
                       </td>
                       <td className="p-4">
-                        <span className="font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                        <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                           +{o.improvement_pct}%
                         </span>
                       </td>
-                      <td className="p-4 text-slate-500 whitespace-nowrap">
+                      <td className="p-4 text-[#94A3B8] whitespace-nowrap">
                         {new Date(o.created_at).toLocaleDateString()}
                       </td>
                       <td className="p-4 text-right space-x-2 whitespace-nowrap">
                         <button
+                          type="button"
                           onClick={() => handleExportSingleOptPDF(o.id)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px]"
+                          className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#FAF7F2] text-[#2B2D42] border border-[#EFEBE4] text-[11px] font-medium shadow-sm"
                         >
-                          <FileText className="w-3 h-3 inline mr-1 text-rose-400" />
+                          <FileText className="w-3 h-3 inline mr-1 text-rose-500" />
                           PDF
                         </button>
                         <button
-                          onClick={() => onLoadPromptToAB(o.original_prompt, o.improved_prompt, 'Original', 'Optimized')}
-                          className="px-2.5 py-1 rounded-lg bg-sky-950 hover:bg-sky-900 text-sky-300 border border-sky-500/30 text-[11px]"
+                          type="button"
+                          onClick={() => onLoadPromptToAB(o.original_prompt, o.improved_prompt, 'Original Draft', 'Polished Version')}
+                          className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-[11px] font-medium"
                         >
                           A/B Test
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteItem('optimization', o.id)}
-                          className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                          className="p-1 text-[#94A3B8] hover:text-rose-600 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5 inline" />
                         </button>
@@ -451,48 +473,52 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {activeHistoryTab === 'ab-tests' && (
           <div className="overflow-x-auto">
             {abTests.length === 0 ? (
-              <div className="p-12 text-center text-xs text-slate-500">
-                No A/B test runs yet. Run a comparison between two prompt variants to view test records.
+              <div className="p-12 text-center space-y-2">
+                <FolderOpen className="w-8 h-8 text-[#94A3B8] mx-auto stroke-1" />
+                <p className="text-sm font-semibold text-[#2B2D42]">No A/B tests run yet.</p>
+                <p className="text-xs text-[#64748B]">Benchmark two prompts side by side in the A/B Testing tab to record your results.</p>
               </div>
             ) : (
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950 text-slate-400 font-semibold border-b border-slate-800">
+                <thead className="bg-[#FAF7F2] text-[#64748B] font-semibold border-b border-[#EFEBE4]">
                   <tr>
                     <th className="p-4">ID</th>
-                    <th className="p-4">Comparison Title</th>
-                    <th className="p-4">Winner Variant</th>
-                    <th className="p-4">Latency (A / B)</th>
+                    <th className="p-4">Test Title</th>
+                    <th className="p-4">Winning Prompt</th>
+                    <th className="p-4">Response Time (A / B)</th>
                     <th className="p-4">Date</th>
-                    <th className="p-4 text-right">Export</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#EFEBE4]">
                   {abTests.map((a) => (
-                    <tr key={a.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="p-4 font-mono text-slate-500">#{a.id}</td>
-                      <td className="p-4 font-semibold text-slate-200">{a.title}</td>
+                    <tr key={a.id} className="hover:bg-[#FAF7F2]/60 transition-colors">
+                      <td className="p-4 font-mono text-[#94A3B8]">#{a.id}</td>
+                      <td className="p-4 font-bold text-[#2B2D42]">{a.title}</td>
                       <td className="p-4">
-                        <span className="font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded border border-emerald-500/30">
+                        <span className="font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
                           {a.winner}
                         </span>
                       </td>
-                      <td className="p-4 font-mono text-slate-400">
+                      <td className="p-4 font-mono text-[#64748B]">
                         {a.latency_a_ms}ms / {a.latency_b_ms}ms
                       </td>
-                      <td className="p-4 text-slate-500 whitespace-nowrap">
+                      <td className="p-4 text-[#94A3B8] whitespace-nowrap">
                         {new Date(a.created_at).toLocaleDateString()}
                       </td>
                       <td className="p-4 text-right space-x-2 whitespace-nowrap">
                         <button
+                          type="button"
                           onClick={() => handleExportSingleABPDF(a.id)}
-                          className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[11px]"
+                          className="px-2.5 py-1 rounded-lg bg-white hover:bg-[#FAF7F2] text-[#2B2D42] border border-[#EFEBE4] text-[11px] font-medium shadow-sm"
                         >
-                          <FileText className="w-3 h-3 inline mr-1 text-rose-400" />
+                          <FileText className="w-3 h-3 inline mr-1 text-rose-500" />
                           PDF
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteItem('ab-test', a.id)}
-                          className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                          className="p-1 text-[#94A3B8] hover:text-rose-600 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5 inline" />
                         </button>
@@ -508,55 +534,58 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Single Prompt View Modal */}
       {selectedPrompt && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4 animate-fadeIn">
+          <div className="bg-white border border-[#EFEBE4] rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-card relative space-y-4">
             <button
+              type="button"
               onClick={() => setSelectedPrompt(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              className="absolute top-5 right-5 text-[#94A3B8] hover:text-[#2B2D42] p-1 rounded-xl hover:bg-[#FAF7F2] transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
                 {selectedPrompt.technique}
               </span>
-              <h3 className="text-lg font-bold text-white mt-1.5">{selectedPrompt.prompt_title}</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{selectedPrompt.task_description}</p>
+              <h3 className="text-lg font-bold font-serif text-[#2B2D42] mt-2">{selectedPrompt.prompt_title}</h3>
+              <p className="text-xs text-[#64748B] mt-0.5">{selectedPrompt.task_description}</p>
             </div>
 
             {selectedPrompt.system_prompt && (
               <div>
-                <label className="text-xs font-semibold text-slate-400 mb-1 block">System Prompt</label>
-                <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono whitespace-pre-wrap">
+                <label className="text-xs font-bold text-[#2B2D42] mb-1.5 block">System Guidance</label>
+                <pre className="p-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EFEBE4] text-xs text-[#64748B] font-mono whitespace-pre-wrap leading-relaxed">
                   {selectedPrompt.system_prompt}
                 </pre>
               </div>
             )}
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 mb-1 block">Prompt Template</label>
-              <pre className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 font-mono whitespace-pre-wrap max-h-72 overflow-y-auto leading-relaxed">
+              <label className="text-xs font-bold text-[#2B2D42] mb-1.5 block">Full Prompt Text</label>
+              <pre className="p-4 rounded-2xl bg-[#FAF7F2] border border-[#EFEBE4] text-xs text-[#2B2D42] font-mono whitespace-pre-wrap max-h-72 overflow-y-auto leading-relaxed">
                 {selectedPrompt.prompt_text}
               </pre>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-800">
+            <div className="flex justify-end space-x-2 pt-3 border-t border-[#EFEBE4]">
               <button
+                type="button"
                 onClick={() => {
                   navigator.clipboard.writeText(selectedPrompt.prompt_text);
-                  onShowToast('Prompt copied!', 'success');
+                  onShowToast('Prompt copied to clipboard!', 'success');
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-white hover:bg-[#FAF7F2] text-[#2B2D42] border border-[#EFEBE4] shadow-sm transition-colors"
               >
-                Copy Prompt
+                Copy prompt
               </button>
               <button
+                type="button"
                 onClick={() => {
                   onLoadPromptToOptimizer(selectedPrompt.prompt_text);
                   setSelectedPrompt(null);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white"
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-soft transition-colors"
               >
                 Open in Optimizer
               </button>

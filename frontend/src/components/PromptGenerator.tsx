@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   Send,
@@ -9,11 +9,11 @@ import {
   Bookmark,
   ChevronDown,
   ChevronUp,
-  Cpu,
-  Layers,
-  ArrowRight,
   Lightbulb,
-  Zap,
+  ArrowRight,
+  Loader2,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { DomainCategory, PromptCandidate, GeneratePromptResponse } from '../types';
 import { api } from '../api/client';
@@ -37,25 +37,32 @@ const CATEGORIES: DomainCategory[] = [
 
 const PRESET_IDEAS = [
   {
-    category: 'Legal',
-    label: 'Legal Terms of Service Analyzer',
-    prompt: 'Summarize complex legal terms of service for ordinary consumers, highlighting arbitration clauses, data privacy rights, and renewal traps.',
+    category: 'Legal' as DomainCategory,
+    label: 'Rental Agreement Summary',
+    prompt: 'Explain a standard apartment rental agreement in simple words for a first-time renter, pointing out common traps like security deposit deductions and renewal rules.',
   },
   {
-    category: 'Coding',
-    label: 'Strict Code Review & Test Generation',
-    prompt: 'Review Python codebase for memory leaks, type annotations, and generate comprehensive pytest unit test cases with edge coverage.',
+    category: 'Coding' as DomainCategory,
+    label: 'Clean Code Review & Tests',
+    prompt: 'Review a Python function for edge-case bugs, type hints, and write clean unit tests using pytest.',
   },
   {
-    category: 'Marketing',
-    label: 'High-Converting SaaS Landing Copy',
-    prompt: 'Generate persuasive B2B SaaS landing page copy focusing on value propositions, objection handling, and actionable CTAs.',
+    category: 'Marketing' as DomainCategory,
+    label: 'Friendly Product Launch Email',
+    prompt: 'Draft a warm, conversational product announcement email for a small craft coffee subscription box.',
   },
   {
-    category: 'Data Analysis',
-    label: 'Executive Financial Trend Synthesis',
-    prompt: 'Analyze raw quarterly financial metrics, extract key revenue anomalies, and generate an executive synthesis with bulleted risks.',
+    category: 'Data Analysis' as DomainCategory,
+    label: 'Plain-English Sales Summary',
+    prompt: 'Summarize quarterly sales numbers in plain language for team members who do not have a finance background.',
   },
+];
+
+const LOADING_MESSAGES = [
+  'Thinking it through...',
+  'Writing your 3 prompts...',
+  'Polishing the phrasing...',
+  'Almost ready with your prompts...',
 ];
 
 export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
@@ -68,18 +75,30 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
   const [tone, setTone] = useState('Professional');
   const [targetModel, setTargetModel] = useState('claude-3-5-sonnet');
   const [loading, setLoading] = useState(false);
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const [result, setResult] = useState<GeneratePromptResponse | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [savedIds, setSavedIds] = useState<Record<string, boolean>>({});
   const [expandedSystem, setExpandedSystem] = useState<Record<string, boolean>>({});
+
+  // Cycle friendly loading messages
+  useEffect(() => {
+    if (!loading) return;
+    const interval = setInterval(() => {
+      setLoadingMsgIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleGenerate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!taskDescription.trim()) {
-      onShowToast('Please enter a task description.', 'error');
+      onShowToast('Please tell us what you need help with first!', 'error');
       return;
     }
 
     setLoading(true);
+    setLoadingMsgIndex(0);
     try {
       const data = await api.generatePrompts({
         task_description: taskDescription.trim(),
@@ -88,9 +107,9 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
         target_model: targetModel,
       });
       setResult(data);
-      onShowToast(`Generated 3 candidate prompt variants via ${data.generation_mode === 'live_api' ? 'Claude API' : 'Smart Heuristic Engine'}!`, 'success');
+      onShowToast('Done! Here are your 3 prompts.', 'success');
     } catch (err: any) {
-      onShowToast(err.message || 'Generation failed', 'error');
+      onShowToast(err.message || 'Hmm, something went wrong. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -99,7 +118,7 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
   const handleCopy = (id: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
-    onShowToast('Prompt copied to clipboard!', 'success');
+    onShowToast('Copied to your clipboard!', 'success');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -114,9 +133,10 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
         system_prompt: candidate.system_prompt,
         explanation: candidate.why_it_works,
       });
-      onShowToast('Saved candidate to history database!', 'success');
+      setSavedIds((prev) => ({ ...prev, [candidate.id]: true }));
+      onShowToast('Saved to your collection!', 'success');
     } catch (err: any) {
-      onShowToast(err.message || 'Could not save prompt', 'error');
+      onShowToast(err.message || 'Could not save prompt right now.', 'error');
     }
   };
 
@@ -125,148 +145,139 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
   };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 p-6 sm:p-8 shadow-2xl">
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold mb-3">
-            <Zap className="w-3.5 h-3.5" />
-            <span>Module 1: Multi-Technique Generation</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            AI-Powered Prompt Generator
-          </h1>
-          <p className="mt-2 text-sm text-slate-300 leading-relaxed">
-            Specify a high-level task goal and generate 3 production-grade prompt variants built on proven prompt engineering principles:
-            <span className="text-indigo-300 font-semibold"> Role Framing</span>,
-            <span className="text-sky-300 font-semibold"> Few-Shot Exemplars</span>, and
-            <span className="text-amber-300 font-semibold"> Chain-of-Thought with Format Delimiters</span>.
-          </p>
+    <div className="space-y-10 max-w-5xl mx-auto">
+      {/* Friendly Page Header */}
+      <div className="text-center max-w-2xl mx-auto space-y-3">
+        <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold">
+          <span>✨ Step 1 of 3</span>
+          <span>&bull;</span>
+          <span>Prompt Generator</span>
         </div>
+        <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#2B2D42] tracking-tight">
+          What do you need help with today?
+        </h1>
+        <p className="text-base text-[#64748B] leading-relaxed">
+          Tell us your goal in a sentence or two. We will write three different prompts you can use right away.
+        </p>
       </div>
 
-      {/* Input Configuration Card */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+      {/* Main Form Card */}
+      <div className="bg-white border border-[#EFEBE4] rounded-3xl p-6 sm:p-8 shadow-card">
         <form onSubmit={handleGenerate} className="space-y-6">
-          {/* Task Description Textarea */}
+          {/* Prompt Task Input */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
-                <span>Task Objective / Requirement</span>
-                <span className="text-rose-400">*</span>
-              </label>
-              <span className="text-xs text-slate-500 font-mono">{taskDescription.length} characters</span>
-            </div>
+            <label
+              htmlFor="taskDescription"
+              className="block font-semibold text-sm text-[#2B2D42] mb-2"
+            >
+              Describe your task
+            </label>
             <textarea
+              id="taskDescription"
               rows={4}
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
-              placeholder="e.g. Summarize legal contracts for non-lawyers, identifying liability clauses, renewal risks, and termination conditions in structured markdown..."
-              className="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-sans transition-all placeholder:text-slate-600"
+              placeholder="For example: Explain a rental agreement in simple words for a first time renter, highlighting key renewal traps."
+              className="w-full px-4 py-3.5 rounded-2xl bg-[#FAF7F2] border border-[#EFEBE4] text-[#2B2D42] text-sm sm:text-base focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all placeholder:text-[#8E90A6] leading-relaxed resize-y"
             />
           </div>
 
-          {/* Quick Preset Starters */}
+          {/* Quick Starter Suggestions */}
           <div>
-            <div className="flex items-center space-x-1.5 text-xs text-slate-400 mb-2">
-              <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-semibold text-slate-300">Quick Starters (Click to test):</span>
+            <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#64748B] mb-2.5">
+              <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+              <span>Not sure where to begin? Try one of these:</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {PRESET_IDEAS.map((preset, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => {
                     setTaskDescription(preset.prompt);
-                    setCategory(preset.category as DomainCategory);
+                    setCategory(preset.category);
                   }}
-                  className="text-left p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800/80 hover:border-indigo-500/40 text-xs transition-all group"
+                  className="text-left p-3 rounded-2xl bg-[#FAF7F2] hover:bg-indigo-50/60 border border-[#EFEBE4] hover:border-indigo-200 text-xs transition-all group"
                 >
-                  <div className="font-semibold text-slate-300 group-hover:text-indigo-300 truncate">
+                  <span className="font-semibold text-[#2B2D42] group-hover:text-indigo-700 block">
                     {preset.label}
-                  </div>
-                  <div className="text-[11px] text-slate-500 truncate mt-0.5">{preset.prompt}</div>
+                  </span>
+                  <span className="text-[#64748B] line-clamp-1 mt-0.5">
+                    {preset.prompt}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Domain Category, Tone & Target Model Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800/80">
-            {/* Category */}
+          {/* Dropdown Options */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5 flex items-center space-x-1.5">
-                <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Domain Category</span>
+              <label className="block text-xs font-semibold text-[#64748B] mb-1.5">
+                What area is this for?
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as DomainCategory)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EFEBE4] text-xs sm:text-sm font-medium text-[#2B2D42] focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
               >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Tone */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5 flex items-center space-x-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                <span>Tone & Style</span>
+              <label className="block text-xs font-semibold text-[#64748B] mb-1.5">
+                How should it sound?
               </label>
               <select
                 value={tone}
                 onChange={(e) => setTone(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EFEBE4] text-xs sm:text-sm font-medium text-[#2B2D42] focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
               >
-                <option value="Professional">Professional & Authoritative</option>
-                <option value="Technical">Technical & Rigorous</option>
-                <option value="Concise">Concise & Direct (Executive)</option>
-                <option value="Step-by-Step">Step-by-Step & Analytical</option>
-                <option value="Conversational">Empathetic & Conversational</option>
+                <option value="Professional">Professional &amp; Clear</option>
+                <option value="Conversational">Warm &amp; Conversational</option>
+                <option value="Concise">Concise &amp; Direct</option>
+                <option value="Technical">Technical &amp; Rigorous</option>
+                <option value="Creative">Creative &amp; Engaging</option>
               </select>
             </div>
 
-            {/* Target Model */}
             <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1.5 flex items-center space-x-1.5">
-                <Cpu className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Target Model Architecture</span>
+              <label className="block text-xs font-semibold text-[#64748B] mb-1.5">
+                Which AI will use it?
               </label>
               <select
                 value={targetModel}
                 onChange={(e) => setTargetModel(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-indigo-500"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF7F2] border border-[#EFEBE4] text-xs sm:text-sm font-medium text-[#2B2D42] focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all cursor-pointer"
               >
                 <option value="claude-3-5-sonnet">Claude 3.5 Sonnet (Recommended)</option>
-                <option value="claude-3-haiku">Claude 3 Haiku (High Speed)</option>
-                <option value="claude-3-opus">Claude 3 Opus (Deep Reasoning)</option>
+                <option value="claude-3-haiku">Claude 3 Haiku (Fast)</option>
+                <option value="claude-3-opus">Claude 3 Opus (In-depth)</option>
               </select>
             </div>
           </div>
 
-          {/* Submit Action */}
-          <div className="flex justify-end pt-2">
+          {/* Primary Action Button */}
+          <div className="pt-3 flex justify-end">
             <button
               type="submit"
               disabled={loading || !taskDescription.trim()}
-              className="px-6 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white shadow-lg shadow-indigo-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-all transform active:scale-95"
+              className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-soft hover:shadow-card hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center space-x-2"
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Engineering Candidates...</span>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{LOADING_MESSAGES[loadingMsgIndex]}</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
-                  <span>Generate 3 Candidate Prompts</span>
+                  <span>Write my 3 prompts</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
@@ -274,145 +285,148 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
         </form>
       </div>
 
-      {/* Candidate Output Cards */}
+      {/* Generated Candidates Display */}
       {result && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in pt-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <h2 className="text-xl font-bold text-white">Generated Candidate Variants</h2>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                {result.category} Domain
-              </span>
+            <div>
+              <h2 className="font-display font-bold text-2xl text-[#2B2D42]">
+                Here are your 3 prompt candidates
+              </h2>
+              <p className="text-sm text-[#64748B] mt-0.5">
+                Each prompt uses a different proven strategy. Pick the one that fits your task best.
+              </p>
             </div>
-            <span className="text-xs text-slate-400">
-              Engine: <span className="font-semibold text-indigo-400">{result.generation_mode === 'live_api' ? 'Anthropic Claude API' : 'Smart Heuristic Engine'}</span>
+            <span className="hidden sm:inline-flex items-center text-xs font-medium px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+              Generated via {result.generation_mode === 'live_api' ? 'Live Claude 3.5' : 'Offline Helper'}
             </span>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {result.candidates.map((candidate, idx) => {
-              const techniqueColors = [
-                { badge: 'bg-indigo-950/80 text-indigo-300 border-indigo-500/30', border: 'border-indigo-500/20' },
-                { badge: 'bg-sky-950/80 text-sky-300 border-sky-500/30', border: 'border-sky-500/20' },
-                { badge: 'bg-amber-950/80 text-amber-300 border-amber-500/30', border: 'border-amber-500/20' },
-              ][idx % 3];
+          <div className="grid grid-cols-1 gap-6">
+            {result.candidates.map((cand, idx) => {
+              const isCopied = copiedId === cand.id;
+              const isSaved = Boolean(savedIds[cand.id]);
+              const isSystemOpen = Boolean(expandedSystem[cand.id]);
+
+              // Friendly badges for each technique
+              const badgeColors = [
+                'bg-indigo-50 text-indigo-700 border-indigo-100',
+                'bg-teal-50 text-teal-700 border-teal-100',
+                'bg-amber-50 text-amber-800 border-amber-100',
+              ];
 
               return (
                 <div
-                  key={candidate.id}
-                  className={`bg-slate-900 border ${techniqueColors.border} rounded-2xl p-5 shadow-xl flex flex-col justify-between hover:border-slate-700 transition-all`}
+                  key={cand.id}
+                  className="bg-white border border-[#EFEBE4] hover:border-indigo-200 rounded-3xl p-6 sm:p-7 shadow-card hover:shadow-card-hover transition-all space-y-5"
                 >
-                  <div className="space-y-4">
-                    {/* Technique Badge & Title */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border ${techniqueColors.badge}`}>
-                          {candidate.technique}
+                  {/* Card Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2.5">
+                        <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${badgeColors[idx % 3]}`}>
+                          Variant {idx + 1}: {cand.technique}
                         </span>
-                        <span className="text-xs font-mono text-slate-500">Variant #{idx + 1}</span>
+                        <span className="text-xs text-[#8E90A6]">
+                          Best for: {cand.best_for}
+                        </span>
                       </div>
-                      <h3 className="font-bold text-base text-white">{candidate.title}</h3>
-                      <p className="text-xs text-slate-400 mt-1 leading-relaxed">{candidate.description}</p>
+                      <h3 className="font-display font-bold text-lg text-[#2B2D42]">
+                        {cand.title}
+                      </h3>
                     </div>
 
-                    {/* Why It Works & Best For Callout */}
-                    <div className="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 text-xs space-y-1.5">
-                      <div className="text-slate-300">
-                        <span className="font-semibold text-indigo-400">Why it works: </span>
-                        {candidate.why_it_works}
-                      </div>
-                      <div className="text-slate-400">
-                        <span className="font-semibold text-slate-300">Best for: </span>
-                        {candidate.best_for}
-                      </div>
-                    </div>
-
-                    {/* Collapsible System Prompt */}
-                    {candidate.system_prompt && (
-                      <div>
-                        <button
-                          type="button"
-                          onClick={() => toggleSystemPrompt(candidate.id)}
-                          className="flex items-center justify-between w-full text-xs font-semibold text-slate-400 hover:text-slate-200 py-1"
-                        >
-                          <span>System Prompt Framing</span>
-                          {expandedSystem[candidate.id] ? (
-                            <ChevronUp className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                        {expandedSystem[candidate.id] && (
-                          <pre className="mt-1 p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-300 font-mono whitespace-pre-wrap">
-                            {candidate.system_prompt}
-                          </pre>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Main Prompt Text Body */}
-                    <div>
-                      <label className="text-[11px] font-bold uppercase text-slate-400 tracking-wider mb-1 block">
-                        Prompt Template Body
-                      </label>
-                      <div className="relative">
-                        <pre className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 font-mono whitespace-pre-wrap max-h-64 overflow-y-auto leading-relaxed">
-                          {candidate.prompt_text}
-                        </pre>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions Toolbar */}
-                  <div className="pt-4 mt-4 border-t border-slate-800/80 space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* Quick Card Top Actions */}
+                    <div className="flex items-center space-x-2 shrink-0">
                       <button
-                        type="button"
-                        onClick={() => handleCopy(candidate.id, candidate.prompt_text)}
-                        className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                        onClick={() => handleCopy(cand.id, cand.prompt_text)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-medium bg-[#FAF7F2] hover:bg-stone-100 text-[#2B2D42] border border-[#EFEBE4] transition-all flex items-center space-x-1.5"
                       >
-                        {copiedId === candidate.id ? (
+                        {isCopied ? (
                           <>
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-emerald-400">Copied</span>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-emerald-700 font-semibold">Copied!</span>
                           </>
                         ) : (
                           <>
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy className="w-3.5 h-3.5 text-[#64748B]" />
                             <span>Copy</span>
                           </>
                         )}
                       </button>
 
                       <button
-                        type="button"
-                        onClick={() => handleSaveToHistory(candidate)}
-                        className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+                        onClick={() => handleSaveToHistory(cand)}
+                        disabled={isSaved}
+                        className={`p-2 rounded-xl text-xs font-medium border transition-all ${
+                          isSaved
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default'
+                            : 'bg-[#FAF7F2] hover:bg-stone-100 text-[#64748B] hover:text-[#2B2D42] border-[#EFEBE4]'
+                        }`}
+                        title={isSaved ? 'Saved to history' : 'Save this candidate'}
                       >
-                        <Bookmark className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>Save</span>
+                        <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current text-emerald-600' : ''}`} />
                       </button>
                     </div>
+                  </div>
 
-                    <div className="grid grid-cols-2 gap-2">
+                  {/* Why this works - Friendly Plain Explanation */}
+                  <div className="bg-[#FAF7F2] border border-[#EFEBE4] rounded-2xl p-3.5 text-xs text-[#64748B] flex items-start space-x-2.5">
+                    <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="text-[#2B2D42] font-semibold">Why this works: </strong>
+                      <span>{cand.why_it_works}</span>
+                    </div>
+                  </div>
+
+                  {/* System Prompt Accordion (if present) */}
+                  {cand.system_prompt && (
+                    <div>
                       <button
                         type="button"
-                        onClick={() => onSendToOptimizer(candidate.prompt_text, `Refine variant ${candidate.title}`)}
-                        className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-950/60 hover:bg-indigo-900/80 text-indigo-300 border border-indigo-500/30 transition-colors"
-                        title="Send this candidate into Prompt Optimizer"
+                        onClick={() => toggleSystemPrompt(cand.id)}
+                        className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center space-x-1"
                       >
-                        <Sliders className="w-3.5 h-3.5" />
-                        <span>Optimize</span>
+                        <span>{isSystemOpen ? 'Hide system instructions' : 'View system instructions'}</span>
+                        {isSystemOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                      </button>
+                      {isSystemOpen && (
+                        <div className="mt-2 p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100 text-xs font-mono text-indigo-900 leading-relaxed">
+                          {cand.system_prompt}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Prompt Text Display Box */}
+                  <div className="relative group/box">
+                    <pre className="p-4 rounded-2xl bg-[#F8F5EE] border border-[#EFEBE4] text-[#2B2D42] text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto">
+                      {cand.prompt_text}
+                    </pre>
+                  </div>
+
+                  {/* Action Bar: Send to Optimizer or A/B Testing */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#EFEBE4]">
+                    <span className="text-xs text-[#8E90A6]">
+                      Ready to test or refine this prompt?
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => onSendToOptimizer(cand.prompt_text, `Polish prompt for ${category}`)}
+                        className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-[#FAF7F2] text-[#2B2D42] border border-[#EFEBE4] hover:border-indigo-300 transition-all flex items-center space-x-1.5"
+                      >
+                        <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Send to Optimizer</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => onSendToABTesting(candidate.prompt_text, candidate.title)}
-                        className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-sky-950/60 hover:bg-sky-900/80 text-sky-300 border border-sky-500/30 transition-colors"
-                        title="Send this candidate into A/B Testing"
+                        onClick={() => onSendToABTesting(cand.prompt_text, cand.title)}
+                        className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-[#FAF7F2] text-[#2B2D42] border border-[#EFEBE4] hover:border-indigo-300 transition-all flex items-center space-x-1.5"
                       >
-                        <SplitSquareVertical className="w-3.5 h-3.5" />
-                        <span>A/B Test</span>
+                        <SplitSquareVertical className="w-3.5 h-3.5 text-indigo-600" />
+                        <span>Compare in A/B Test</span>
                       </button>
                     </div>
                   </div>
@@ -425,3 +439,4 @@ export const PromptGenerator: React.FC<PromptGeneratorProps> = ({
     </div>
   );
 };
+export default PromptGenerator;
